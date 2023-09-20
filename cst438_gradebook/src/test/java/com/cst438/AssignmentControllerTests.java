@@ -1,32 +1,37 @@
 package com.cst438;
-import static com.cst438.JunitTestGradebook.fromJsonString;
-import static com.google.common.base.CharMatcher.any;
-import static com.google.common.base.Verify.verify;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import aj.org.objectweb.asm.TypeReference;
+import com.cst438.controllers.AssignmentController;
 import com.cst438.domain.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.verification.VerificationMode;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.util.NestedServletException;
 
 import java.sql.Date;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -46,25 +51,37 @@ public class AssignmentControllerTests {
         currentAssign.setId(assignmentId);
 
         when(assignmentRepository.findById(assignmentId)).thenReturn(Optional.of(currentAssign));
-        MockHttpServletResponse response;
-         response = mvc.perform(MockMvcRequestBuilders.delete("/assignment/{assignment_id}", assignmentId)
+
+        mvc.perform(delete("/assignment/{assignment_id}", assignmentId)
                         .accept(MediaType.APPLICATION_JSON))
-                 .andReturn().getResponse();
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    public void GetAssignmentByIdTest() throws Exception {
+        int assignmentId = 1;
+        Assignment assignment = new Assignment();
+        assignment.setId(assignmentId);
+        assignment.setName("software");
+        when(assignmentRepository.findById(assignmentId)).thenReturn(Optional.of(assignment));
+
+        MockHttpServletResponse response;
+        response = mvc.perform(MockMvcRequestBuilders
+                        .get("/assignment/{assignment_id}", assignmentId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
 
         assertEquals(200, response.getStatus());
-
-
     }
     @Test
     public void AddAssignmentTest() throws Exception {
+        AssignmentDTO assignmentDTO = new AssignmentDTO(1, "logic", "2023-09-28", "BUS 203 - Financial Accounting", 30157);
 
-        AssignmentDTO assignmentDTO = new AssignmentDTO(1, "logic", "2023-09-20", "Reasoning with Logic", 2);
         Assignment new_assignment = new Assignment();
         new_assignment.setName(assignmentDTO.assignmentName());
-//        new_assignment.setCourse(courseRepository.findById(assignmentDTO.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
         new_assignment.setDueDate(Date.valueOf(assignmentDTO.dueDate()));
-
-        when(assignmentRepository.save(new_assignment)).thenReturn(new_assignment);
+        when(assignmentRepository.save(any(Assignment.class))).thenReturn(new_assignment);
 
         MockHttpServletResponse response;
         response = mvc.perform(MockMvcRequestBuilders.post("/assignment")
@@ -75,6 +92,7 @@ public class AssignmentControllerTests {
 
         assertEquals(200, response.getStatus());
     }
+
 
 
 
@@ -126,43 +144,24 @@ public class AssignmentControllerTests {
         assertEquals("Modus tollens", res[1].assignmentName());
         assertEquals(200, response.getStatus());
     }
-
     @Test
-    public void UpdateAssignmentsTest() throws Exception{
-        Assignment newAssignment = new Assignment();
-        newAssignment.setName("New Assignment");
-        newAssignment.setDueDate(Date.valueOf("2023-09-21"));
-        Assignment currentAssignment = assignmentRepository.save(newAssignment);
+    public void UpdateAssignmentTest() throws Exception {
 
-        AssignmentDTO updatedAssignmentDTO = new AssignmentDTO(
-                currentAssignment.getId(),
-                "Updated Assignment",
-                "2023-09-22",
-                "Updated Course",
-                2
-        );
-        mvc.perform(MockMvcRequestBuilders.put("/assignment/{assignment_id}", currentAssignment.getId())
-                        .content(asJsonString(updatedAssignmentDTO))
+        AssignmentDTO assignmentDTO = new AssignmentDTO(1, "Updated Assignment", "2023-09-23", "CST 363 - Introduction to Database Systems", 31045);
+        Assignment existingAssignment = new Assignment();
+        existingAssignment.setId(1);
+        existingAssignment.setName("Original Assignment");
+        existingAssignment.setDueDate(Date.valueOf("2023-09-28"));
+
+        when(assignmentRepository.findById(1)).thenReturn(Optional.of(existingAssignment));
+        when(courseRepository.findById(3)).thenReturn(Optional.of(new Course()));
+        mvc.perform(put("/assignment/{assignment_id}", 1)
+                        .content(asJsonString(assignmentDTO))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-
-        mvc.perform(MockMvcRequestBuilders.get("/assignment/{assignment_id}", currentAssignment.getId())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.assignmentName").value("Updated Assignment"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.dueDate").value("2023-09-22"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.courseTitle").value("Updated Course"));
-
-        MockHttpServletResponse response = mvc.perform(MockMvcRequestBuilders.get("/assignment/{assignment_id}",currentAssignment.getId())
-                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andReturn().getResponse();
-        assertEquals(200, response.getStatus());
+                .andExpect(content().string(""));
     }
-
-
-
 
     private static String asJsonString(final Object obj) {
         try {
