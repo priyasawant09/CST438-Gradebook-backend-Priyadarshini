@@ -15,6 +15,7 @@ import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
 import java.util.*;
@@ -59,6 +61,8 @@ public class AssignmentControllerTests {
         AssignmentDTO assignmentDTO = new AssignmentDTO(1, "logic", "2023-09-20", "Reasoning with Logic", 2);
         Assignment new_assignment = new Assignment();
         new_assignment.setName(assignmentDTO.assignmentName());
+//        new_assignment.setCourse(courseRepository.findById(assignmentDTO.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
+        new_assignment.setDueDate(Date.valueOf(assignmentDTO.dueDate()));
 
         when(assignmentRepository.save(new_assignment)).thenReturn(new_assignment);
 

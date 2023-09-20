@@ -1,6 +1,7 @@
 package com.cst438.controllers;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +28,7 @@ public class AssignmentController {
     @Autowired
     CourseRepository courseRepository;
 
-    @GetMapping("/assignment")
+    @GetMapping("/assignment") //get by professor
     public AssignmentDTO[] getAllAssignmentsForInstructor() {
         // get all assignments for this instructor
         String instructorEmail = "dwisneski@csumb.edu";  // user name (should be instructor's email)
@@ -48,7 +49,7 @@ public class AssignmentController {
 
 
 
-    @GetMapping("/assignment/{assignment_id}")
+    @GetMapping("/assignment/{assignment_id}") //get by ID
 
     public AssignmentDTO getListAssignment(@PathVariable("assignment_id") int assignment_id) {
         Assignment assignment = assignmentRepository.findById(assignment_id)
@@ -66,15 +67,22 @@ public class AssignmentController {
 
     @DeleteMapping("/assignment/{assignment_id}")
     public void deleteAssignment(
-            @PathVariable("assignment_id") int id) {
+            @PathVariable("assignment_id") int id ,@RequestParam(value = "force") Optional<Boolean> force){
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
-        assignmentRepository.delete(assignment);
+        if (force.isPresent() && force.get() == true){
+            assignmentRepository.delete(assignment);
+        }else if (assignment.getAssignmentGrades().isEmpty()) {
+            assignmentRepository.delete(assignment);
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Grades are there");
+        }
 
     }
 
+
     @PutMapping("/assignment/{assignment_id}")
-    public Assignment updateAssignment(
+    public void updateAssignment(
             @PathVariable("assignment_id") int id,
             @RequestBody AssignmentDTO assign) {
         Assignment updateAssignment = assignmentRepository.findById(id)
@@ -82,16 +90,16 @@ public class AssignmentController {
         updateAssignment.setName(assign.assignmentName());
         updateAssignment.setDueDate(Date.valueOf(assign.dueDate()));
         updateAssignment.setCourse(courseRepository.findById(assign.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
-        return assignmentRepository.save(updateAssignment);
+        assignmentRepository.save(updateAssignment);
     }
 
     @PostMapping("/assignment")
-    public Assignment AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
+    public void AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
         Assignment new_assignment = new Assignment();
         new_assignment.setName(assignmentDTO.assignmentName());
         new_assignment.setCourse(courseRepository.findById(assignmentDTO.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
         new_assignment.setDueDate(Date.valueOf(assignmentDTO.dueDate()));
-        return assignmentRepository.save(new_assignment);
+        assignmentRepository.save(new_assignment);
     }
 
 
