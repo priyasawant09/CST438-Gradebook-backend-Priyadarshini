@@ -81,6 +81,7 @@ public class AssignmentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         updateAssignment.setName(assign.assignmentName());
         updateAssignment.setDueDate(Date.valueOf(assign.dueDate()));
+        updateAssignment.setCourse(courseRepository.findById(assign.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
         return assignmentRepository.save(updateAssignment);
     }
 
@@ -88,6 +89,8 @@ public class AssignmentController {
     public Assignment AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
         Assignment new_assignment = new Assignment();
         new_assignment.setName(assignmentDTO.assignmentName());
+        new_assignment.setCourse(courseRepository.findById(assignmentDTO.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
+        new_assignment.setDueDate(Date.valueOf(assignmentDTO.dueDate()));
         return assignmentRepository.save(new_assignment);
     }
 
