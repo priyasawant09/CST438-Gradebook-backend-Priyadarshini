@@ -1,18 +1,14 @@
 package com.cst438.controllers;
 
+import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cst438.domain.Assignment;
@@ -51,4 +47,50 @@ public class AssignmentController {
 	}
 	
 	// TODO create CRUD methods for Assignment
+
+	@GetMapping("/assignment/{assignment_id}")
+
+	public AssignmentDTO getAssignment(@PathVariable("assignment_id") int assignment_id){
+		Assignment assignment = assignmentRepository.findById(assignment_id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+		return new AssignmentDTO(
+				assignment.getId(),
+				assignment.getName(),
+				assignment.getDueDate().toString(),
+				assignment.getCourse().getTitle(),
+				assignment.getCourse().getCourse_id()
+		);
+
+    }
+
+
+	@DeleteMapping ("/assignment/{assignment_id}")
+	public void deleteAssignment(
+			@PathVariable("assignment_id") int id){
+		Assignment assignment = assignmentRepository.findById(id)
+				.orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+		assignmentRepository.delete(assignment);
+
+	}
+	
+	@PutMapping("/assignment/{assignment_id}")
+	public Assignment updateAssignment(
+			@PathVariable("assignment_id") int id,
+			@RequestBody AssignmentDTO assign) {
+		Assignment updateAssignment = assignmentRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+		updateAssignment.setName(assign.assignmentName());
+		updateAssignment.setDueDate(Date.valueOf(assign.dueDate()));
+		return assignmentRepository.save(updateAssignment);
+	}
+
+	@PostMapping("/assignment")
+	public Assignment createAssignment(@RequestBody AssignmentDTO assignmentDTO){
+		Assignment new_assignment = new Assignment();
+		new_assignment.setName(assignmentDTO.assignmentName());
+		return assignmentRepository.save(new_assignment);
+	}
+
+
+
 }
