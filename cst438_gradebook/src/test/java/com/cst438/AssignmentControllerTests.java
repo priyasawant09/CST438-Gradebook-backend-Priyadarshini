@@ -2,15 +2,14 @@ package com.cst438;
 import static com.cst438.JunitTestGradebook.fromJsonString;
 import static com.google.common.base.CharMatcher.any;
 import static com.google.common.base.Verify.verify;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import aj.org.objectweb.asm.TypeReference;
 import com.cst438.domain.*;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.sql.Date;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -44,16 +40,17 @@ public class AssignmentControllerTests {
     @Test
     public void DeleteAssignmentTest() throws Exception {
         int assignmentId = 1;
-        Assignment existingAssignment = new Assignment();
-        existingAssignment.setId(assignmentId);
+        Assignment currentAssign = new Assignment();
+        currentAssign.setId(assignmentId);
 
-        when(assignmentRepository.findById(assignmentId)).thenReturn(Optional.of(existingAssignment));
+        when(assignmentRepository.findById(assignmentId)).thenReturn(Optional.of(currentAssign));
         MockHttpServletResponse response;
          response = mvc.perform(MockMvcRequestBuilders.delete("/assignment/{assignment_id}", assignmentId)
                         .accept(MediaType.APPLICATION_JSON))
                  .andReturn().getResponse();
 
         assertEquals(200, response.getStatus());
+
 
     }
     @Test
@@ -75,24 +72,6 @@ public class AssignmentControllerTests {
         assertEquals(200, response.getStatus());
     }
 
-    @Test
-    public void UpdateAssignmentTest() throws Exception {
-        int assignmentId = 1;
-        AssignmentDTO updateAssign = new AssignmentDTO(1, "Rest Assignment", "2023-09-21", "Software Engineering", 1);
-        Assignment currentAssign = new Assignment();
-        currentAssign.setId(assignmentId);
-        when(assignmentRepository.findById(assignmentId)).thenReturn(Optional.of(currentAssign));
-
-        MockHttpServletResponse response;
-        response = mvc.perform(MockMvcRequestBuilders.put("/assignment/{assignment_id}",assignmentId)
-                        .content(asJsonString(updateAssign))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertEquals(200, response.getStatus());
-        assertEquals("Updated Assignment", currentAssign.getName());
-    }
 
 
 

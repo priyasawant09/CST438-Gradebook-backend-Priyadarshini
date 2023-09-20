@@ -59,5 +59,13 @@ public class Assignment {
 		return "Assignment [id=" + id + ", course_id=" + course.getCourse_id() + ", name=" + name + ", dueDate=" + dueDate
 				+ "]";
 	}
-	
+
+	public List<AssignmentGrade> getAssignmentGrades() {
+		return assignmentGrades;
+	}
+
+	public void setAssignmentGrades(List<AssignmentGrade> assignmentGrades) {
+		this.assignmentGrades = assignmentGrades;
+	}
+
 }
