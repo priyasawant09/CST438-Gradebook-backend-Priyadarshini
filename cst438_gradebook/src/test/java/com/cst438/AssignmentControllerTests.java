@@ -123,6 +123,49 @@ public class AssignmentControllerTests {
         assertEquals(200, response.getStatus());
     }
 
+//    @Test
+//    public void UpdateAssignmentsTest() throws Exception{
+//        Assignment newAssignment = new Assignment();
+//        newAssignment.setName("New Assignment");
+//        newAssignment.setDueDate(Date.valueOf("2023-09-21"));
+//        Assignment currentAssignment = assignmentRepository.save(newAssignment);
+//
+//        if (currentAssignment != null) {
+//            System.out.println("Current Assignment ID: " + currentAssignment.getId());
+//        } else {
+//            System.out.println("Current Assignment is null");
+//        }
+//        assertNotNull(currentAssignment);
+//        AssignmentDTO updatedAssignmentDTO = new AssignmentDTO(
+//                currentAssignment.getId(),
+//                "Updated Assignment",
+//                "2023-09-22",
+//                "Updated Course",
+//                2
+//        );
+//        mvc.perform(MockMvcRequestBuilders.put("/assignment/{assignment_id}", currentAssignment.getId())
+//                        .content(asJsonString(updatedAssignmentDTO))
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .accept(MediaType.APPLICATION_JSON))
+//                .andExpect(MockMvcResultMatchers.status().isOk());
+//
+//        mvc.perform(MockMvcRequestBuilders.get("/assignment/{assignment_id}", currentAssignment.getId())
+//                        .accept(MediaType.APPLICATION_JSON))
+//                .andExpect(MockMvcResultMatchers.status().isOk())
+//                .andExpect(MockMvcResultMatchers.jsonPath("$.assignmentName").value("Updated Assignment"))
+//                .andExpect(MockMvcResultMatchers.jsonPath("$.dueDate").value("2023-09-22"))
+//                .andExpect(MockMvcResultMatchers.jsonPath("$.courseTitle").value("Updated Course"));
+//
+//        MockHttpServletResponse response = mvc.perform(MockMvcRequestBuilders.get("/assignment/{assignment_id}",currentAssignment.getId())
+//                        .accept(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk())
+//                .andReturn().getResponse();
+//        assertEquals(200, response.getStatus());
+//    }
+
+
+
+
     private static String asJsonString(final Object obj) {
         try {
 
