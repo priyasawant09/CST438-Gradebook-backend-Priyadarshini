@@ -77,4 +77,5 @@ public class RegistrationServiceMQ implements RegistrationService {
 		}
 	}
 
+
 }

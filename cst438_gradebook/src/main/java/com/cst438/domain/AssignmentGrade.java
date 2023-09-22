@@ -68,4 +68,5 @@ public class AssignmentGrade {
 		return "AssignmentGrades [id=" + id + ", studentEnrollment=" + studentEnrollment + ", assignment=" + assignment
 				+ ", score=" + score + "]";
 	}
+
 }

@@ -12,3 +12,4 @@ public interface AssignmentGradeRepository extends CrudRepository <AssignmentGra
 			@Param("email") String email );
 	
 }
+
