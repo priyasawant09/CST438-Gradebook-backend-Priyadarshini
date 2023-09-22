@@ -7,3 +7,4 @@ public interface RegistrationService {
 	public void sendFinalGrades(int course_id , FinalGradeDTO[] grades);
 
 }
+
