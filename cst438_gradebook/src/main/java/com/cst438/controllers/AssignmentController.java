@@ -1,11 +1,9 @@
 package com.cst438.controllers;
 
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
@@ -52,8 +50,14 @@ public class AssignmentController {
     @GetMapping("/assignment/{assignment_id}") //get by ID
 
     public AssignmentDTO getListAssignment(@PathVariable("assignment_id") int assignment_id) {
-        Assignment assignment = assignmentRepository.findById(assignment_id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+        String instructorEmail = "dwisneski@csumb.edu";
+        Assignment assignment = assignmentRepository.findById(assignment_id).orElse(null);
+        if (assignment == null){
+            throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "assignment not found "+ assignment_id);
+        }
+        if (! assignment.getCourse().getInstructor().equals(instructorEmail)) {
+            throw  new ResponseStatusException( HttpStatus.FORBIDDEN, "not authorized "+assignment_id);
+        }
         return new AssignmentDTO(
                 assignment.getId(),
                 assignment.getName(),
@@ -67,13 +71,17 @@ public class AssignmentController {
 
     @DeleteMapping("/assignment/{assignment_id}")
     public void deleteAssignment(
-            @PathVariable("assignment_id") int id ,@RequestParam(value = "force") Optional<Boolean> force){
-        Assignment assignment = assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
-        if (force.isPresent() && force.get() == true){
-            assignmentRepository.delete(assignment);
-        }else if (assignment.getAssignmentGrades().isEmpty()) {
-            assignmentRepository.delete(assignment);
+            @PathVariable("assignment_id") int id ,@RequestParam(value = "force") Optional<String> force){
+        String instructorEmail = "dwisneski@csumb.edu";
+        Assignment assignment = assignmentRepository.findById(id).orElse(null);
+        if (assignment == null){
+            return;
+        }
+        if (!assignment.getCourse().getInstructor().equals(instructorEmail)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"not authorized "+id);
+        }
+        if (assignment.getAssignmentGrades().isEmpty() || force.isPresent()) {
+            assignmentRepository.deleteById(id);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Grades are there");
         }
@@ -85,21 +93,28 @@ public class AssignmentController {
     public void updateAssignment(
             @PathVariable("assignment_id") int id,
             @RequestBody AssignmentDTO assign) {
-        Assignment updateAssignment = assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+        String instructorEmail = "dwisneski@csumb.edu";
+        Assignment updateAssignment = assignmentRepository.findById(id).orElse(null);
+        if (updateAssignment==null || ! updateAssignment.getCourse().getInstructor().equals(instructorEmail)){
+            throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "assignment not found or not authorized "+id);
+        }
         updateAssignment.setName(assign.assignmentName());
         updateAssignment.setDueDate(Date.valueOf(assign.dueDate()));
-        updateAssignment.setCourse(courseRepository.findById(assign.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
         assignmentRepository.save(updateAssignment);
     }
 
     @PostMapping("/assignment")
-    public void AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
+    public int AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
+        String instructor_email = "dwisneski@csumb.edu";
+        Course course = courseRepository.findById(assignmentDTO.courseId()).orElse(null);
+        if(course == null || ! course.getInstructor().equals(instructor_email))
+            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "course id not found or not authorized" + assignmentDTO.courseId());
         Assignment new_assignment = new Assignment();
         new_assignment.setName(assignmentDTO.assignmentName());
-        new_assignment.setCourse(courseRepository.findById(assignmentDTO.courseId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Assignment not found")));
+        new_assignment.setCourse(course);
         new_assignment.setDueDate(Date.valueOf(assignmentDTO.dueDate()));
         assignmentRepository.save(new_assignment);
+        return new_assignment.getId();
     }
 
 
