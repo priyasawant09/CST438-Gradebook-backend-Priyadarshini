@@ -15,13 +15,11 @@ INSERT INTO assignment (id, due_date, name, course_id) values
 (4, '2021-09-02', 'assignment4 part 2', 40443);
 INSERT INTO enrollment (id, student_email, student_name, course_id)  values
 (2, 'dwisneski@csumb.edu', 'david', 31045),
-(3, 'tom@csumb.edu', 'tom', 40443),
-(4, 'test@csumb.edu', 'test', 40443)
+(3, 'tom@csumb.edu', 'tom', 40443)
 ;
 insert into assignment_grade (score, assignment_id, enrollment_id) values
 (94, 2, 2),
 (95, 2, 3),
-(80, 3 ,3),
-(95, 3 ,4)
+(80, 3 ,3)
 ;
 

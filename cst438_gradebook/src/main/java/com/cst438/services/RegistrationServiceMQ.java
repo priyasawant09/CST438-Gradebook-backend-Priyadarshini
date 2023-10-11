@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +35,10 @@ public class RegistrationServiceMQ implements RegistrationService {
 		System.out.println("MQ registration service ");
 	}
 
-//	@Bean
-//	Queue createQueue() {
-//		return new Queue("gradebook-queue");
-//	}
+	@Bean
+	Queue createQueue() {
+		return new Queue("gradebook-queue");
+	}
 
 	Queue registrationQueue = new Queue("registration-queue", true);
 
@@ -68,14 +69,23 @@ public class RegistrationServiceMQ implements RegistrationService {
 	 */
 	@Override
 	public void sendFinalGrades(int course_id, FinalGradeDTO[] grades) {
-		 
-		System.out.println("Start sendFinalGrades "+course_id);
+		try {
+			System.out.println("Start sendFinalGrades " + course_id);
 
-		//TODO convert grades to JSON string and send to registration service
-		String jsonGrade = asJsonString(grades);
-		rabbitTemplate.convertAndSend("registration-exchange", "registration-routing-key", jsonGrade);
+			ObjectMapper objectMapper = new ObjectMapper();
+			String gradeJson = objectMapper.writeValueAsString(grades);
+
+			System.out.println("Sending grade message: " + gradeJson);
+
+			rabbitTemplate.convertAndSend(registrationQueue.getName(), gradeJson);
+
+			System.out.println("Grade message sent successfully.");
+		} catch (Exception e) {
+			throw new RuntimeException("Error sending final grades: " + e.getMessage(), e);
+		}
 	}
-	
+
+
 	private static String asJsonString(final Object obj) {
 		try {
 			return new ObjectMapper().writeValueAsString(obj);
