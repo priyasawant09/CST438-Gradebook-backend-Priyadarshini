@@ -3,6 +3,7 @@ package com.cst438.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,19 +28,23 @@ public class RegistrationServiceREST implements RegistrationService {
 	
 	@Value("${registration.url}") 
 	String registration_url;
-	
+
+
 	public RegistrationServiceREST() {
 		System.out.println("REST registration service ");
 	}
-	
+
 	@Override
-	public void sendFinalGrades(int course_id , FinalGradeDTO[] grades) { 
-		
+	public void sendFinalGrades(int course_id , FinalGradeDTO[] grades) {
 		//TODO use restTemplate to send final grades to registration service
-		
+		String url = registration_url +"/" +  Integer.toString(course_id);
+		System.out.println("Inside sendFinalGrades ");
+		System.out.println(url);
+		restTemplate.put(url ,grades);
 	}
 	
 	@Autowired
+
 	CourseRepository courseRepository;
 
 	@Autowired
@@ -53,15 +58,19 @@ public class RegistrationServiceREST implements RegistrationService {
 	@PostMapping("/enrollment")
 	@Transactional
 	public EnrollmentDTO addEnrollment(@RequestBody EnrollmentDTO enrollmentDTO) {
-		
+
 		// Receive message from registration service to enroll a student into a course.
-		
-		System.out.println("GradeBook addEnrollment "+enrollmentDTO);
-		
-		//TODO remove following statement when complete.
-		return null;
+		Course course = courseRepository.findById(enrollmentDTO.courseId()).orElse(null);
+		Enrollment enroll = new Enrollment();
+		enroll.setCourse(course);
+		enroll.setStudentName(enrollmentDTO.studentName());
+		enroll.setStudentEmail(enrollmentDTO.studentEmail());
+
+		enrollmentRepository.save(enroll);
+
+		//System.out.println("GradeBook addEnrollment "+enrollmentDTO);
+		return enrollmentDTO;
 		
 	}
-
 
 }
