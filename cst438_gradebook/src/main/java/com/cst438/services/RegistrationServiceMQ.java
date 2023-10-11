@@ -73,7 +73,7 @@ public class RegistrationServiceMQ implements RegistrationService {
 
 		//TODO convert grades to JSON string and send to registration service
 		String jsonGrade = asJsonString(grades);
-		rabbitTemplate.convertAndSend("registration-exchange", "registration-routing-key", jsonGrade);
+		rabbitTemplate.convertAndSend(registrationQueue.getName(), jsonGrade);
 	}
 	
 	private static String asJsonString(final Object obj) {
