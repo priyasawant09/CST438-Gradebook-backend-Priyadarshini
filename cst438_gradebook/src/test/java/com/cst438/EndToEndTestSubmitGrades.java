@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -30,17 +27,25 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 public class EndToEndTestSubmitGrades {
 
-	public static final String CHROME_DRIVER_FILE_LOCATION = "C:/chromedriver_win32/chromedriver.exe";
+	public static final String CHROME_DRIVER_FILE_LOCATION = "/Users/priya/Downloads/chromedriver-mac-x64/chromedriver";
 
 	public static final String URL = "http://localhost:3000";
 	public static final int SLEEP_DURATION = 1000; // 1 second.
 	public static final String TEST_ASSIGNMENT_NAME = "db design";
 	public static final String NEW_GRADE = "99";
+	public static final String UPDATED_ASSIGNMENT_NAME = "React Assignment";
+	public static final String ADD_ASSIGNMENT_NAME = "Database Assignment";
+
+	public static final String ADD_ASSIGNMENT_ID = "31045";
+
+	public static final String ADD_ASSIGNMENT_DATE= "10/09/2023";
+
+
+
 
 
 	@Test
 	public void addCourseTest() throws Exception {
-
 
 
 		// set the driver location and start driver
@@ -50,9 +55,9 @@ public class EndToEndTestSubmitGrades {
 		// FireFox 	webdriver.firefox.driver 	FirefoxDriver
 		// IE 		webdriver.ie.driver 		InternetExplorerDriver
 		//@formatter:on
-		
+
 		/*
-		 * initialize the WebDriver and get the home page. 
+		 * initialize the WebDriver and get the home page.
 		 */
 
 		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
@@ -62,16 +67,12 @@ public class EndToEndTestSubmitGrades {
 
 		driver.get(URL);
 		Thread.sleep(SLEEP_DURATION);
-		
+
 		WebElement w;
-		
+
 
 		try {
-			/*
-			* locate the <td> element for assignment title 'db design'
-			* 
-			*/
-			
+
 			List<WebElement> elements  = driver.findElements(By.xpath("//td"));
 			boolean found = false;
 			for (WebElement we : elements) {
@@ -82,16 +83,8 @@ public class EndToEndTestSubmitGrades {
 				}
 			}
 			assertThat(found).withFailMessage("The test assignment was not found.").isTrue();
-
-			/*
-			 *  Locate and click Grade button to indicate to grade this assignment.
-			 */
-			
 			Thread.sleep(SLEEP_DURATION);
 
-			/*
-			 *  enter grades for all students, then click save.
-			 */
 			ArrayList<String> originalGrades = new ArrayList<>();
 			elements  = driver.findElements(By.xpath("//input"));
 			for (WebElement element : elements) {
@@ -100,23 +93,19 @@ public class EndToEndTestSubmitGrades {
 				element.sendKeys(NEW_GRADE);
 				Thread.sleep(SLEEP_DURATION);
 			}
-			
+
 			for (String s : originalGrades) {
 				System.out.println("'"+s+"'");
 			}
-
-			/*
-			 *  Locate submit button and click
-			 */
 			driver.findElement(By.id("sgrade")).click();
 			Thread.sleep(SLEEP_DURATION);
-			
+
 			w = driver.findElement(By.id("gmessage"));
 			assertThat(w.getText()).withFailMessage("After saving grades, message should be \"Grades saved.\"").startsWith("Grades saved");
-			
+
 			driver.navigate().back();  // back button to last page
 			Thread.sleep(SLEEP_DURATION);
-			
+
 			// find the assignment 'db design' again.
 			elements  = driver.findElements(By.xpath("//td"));
 			found = false;
@@ -129,24 +118,24 @@ public class EndToEndTestSubmitGrades {
 			}
 			Thread.sleep(SLEEP_DURATION);
 			assertThat(found).withFailMessage("The test assignment was not found.").isTrue();
-			
+
 			// verify the grades. Change grades back to original values
 
 			elements  = driver.findElements(By.xpath("//input"));
 			for (int idx=0; idx < elements.size(); idx++) {
 				WebElement element = elements.get(idx);
 				assertThat(element.getAttribute("value")).withFailMessage("Incorrect grade value.").isEqualTo(NEW_GRADE);
-				
+
 				// clear the input value by backspacing over the value
 				while(!element.getAttribute("value").equals("")){
-			        element.sendKeys(Keys.BACK_SPACE);
-			    }
+					element.sendKeys(Keys.BACK_SPACE);
+				}
 				if (!originalGrades.get(idx).equals("")) element.sendKeys(originalGrades.get(idx));
 				Thread.sleep(SLEEP_DURATION);
 			}
 			driver.findElement(By.id("sgrade")).click();
 			Thread.sleep(SLEEP_DURATION);
-			
+
 			w = driver.findElement(By.id("gmessage"));
 			assertThat(w.getText()).withFailMessage("After saving grades, message should be \"Grades saved.\"").startsWith("Grades saved");
 
@@ -158,6 +147,115 @@ public class EndToEndTestSubmitGrades {
 			driver.quit();
 		}
 
+	}
+	@Test
+	public void addAssignmentTest() throws Exception {
+		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
+		WebDriver driver = new ChromeDriver();
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
+
+
+		try {
+			driver.get(URL);
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate and click the "Add Assignment" button
+			driver.findElement(By.id("add-button1")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate and click the "Add Assignment" button
+			driver.findElement(By.id("add-button2")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// Find the assignment name input field and enter a new assignment name
+			WebElement assignmentNameElement = driver.findElement(By.id("assignment-name"));
+			assignmentNameElement.sendKeys(ADD_ASSIGNMENT_NAME);
+			Thread.sleep(SLEEP_DURATION);
+
+			WebElement assignmentIdElement = driver.findElement(By.id("assignment-id"));
+			assignmentIdElement.sendKeys(ADD_ASSIGNMENT_ID);
+
+			WebElement assignmentDateElement = driver.findElement(By.id("assignment-date"));
+			assignmentDateElement.sendKeys(ADD_ASSIGNMENT_DATE);
+
+
+			// Locate and click the "Save" button to add the assignment
+			driver.findElement(By.id("submit-button")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+			driver.quit();
+			Thread.sleep(5000);
+		}
+	}
+
+	@Test
+	public void updateAssignmentTest() throws Exception {
+		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
+		WebDriver driver = new ChromeDriver();
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+		try {
+			driver.get(URL);
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate the assignment to be updated (you may need to locate it based on a unique identifier)
+			WebElement assignmentElement = driver.findElement(By.id("edit-button")); // Change this selector accordingly
+			assignmentElement.click();
+			Thread.sleep(SLEEP_DURATION);
+
+			// Find the assignment name input field and update the assignment name
+			WebElement assignmentNameElement = driver.findElement(By.id("assignment-name"));
+			assignmentNameElement.clear();
+			assignmentNameElement.sendKeys(UPDATED_ASSIGNMENT_NAME);
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate and click the "Save" button to update the assignment
+			driver.findElement(By.id("save-assignment")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+			driver.quit();
+			Thread.sleep(5000);
+		}
+	}
+
+	@Test
+	public void deleteAssignmentTest() throws Exception {
+		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
+		WebDriver driver = new ChromeDriver();
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+		try {
+			driver.get(URL);
+			Thread.sleep(SLEEP_DURATION);
+
+			// Locate and click the "Delete" button
+			driver.findElement(By.id("delete-button")).click();
+			Thread.sleep(SLEEP_DURATION);
+
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+			driver.quit();
+			Thread.sleep(5000);
+		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
