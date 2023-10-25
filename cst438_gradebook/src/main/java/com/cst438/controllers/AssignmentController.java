@@ -1,20 +1,18 @@
 package com.cst438.controllers;
 
+import java.security.Principal;
 import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
+import com.cst438.domain.*;
+import com.cst438.services.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.cst438.domain.Assignment;
-import com.cst438.domain.AssignmentDTO;
-import com.cst438.domain.AssignmentRepository;
-import com.cst438.domain.Course;
-import com.cst438.domain.CourseRepository;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @CrossOrigin
@@ -26,37 +24,52 @@ public class AssignmentController {
     @Autowired
     CourseRepository courseRepository;
 
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/assignment") //get by professor
-    public AssignmentDTO[] getAllAssignmentsForInstructor() {
+    public AssignmentDTO[] getAllAssignmentsForInstructor(Principal principal) {
         // get all assignments for this instructor
-        String instructorEmail = "dwisneski@csumb.edu";  // user name (should be instructor's email)
-        List<Assignment> assignments = assignmentRepository.findByEmail(instructorEmail);
-        AssignmentDTO[] result = new AssignmentDTO[assignments.size()];
-        for (int i = 0; i < assignments.size(); i++) {
-            Assignment as = assignments.get(i);
-            AssignmentDTO dto = new AssignmentDTO(
-                    as.getId(),
-                    as.getName(),
-                    as.getDueDate().toString(),
-                    as.getCourse().getTitle(),
-                    as.getCourse().getCourse_id());
-            result[i] = dto;
+        System.out.print(principal.getName());
+        String userEmail = principal.getName();
+        //User user = userRepository.findByUsername(userEmail);
+
+       // if (user.getRole().equals("ADMIN")) {
+            List<Assignment> assignments = assignmentRepository.findByEmail(userEmail);
+            AssignmentDTO[] result = new AssignmentDTO[assignments.size()];
+            for (int i = 0; i < assignments.size(); i++) {
+                Assignment as = assignments.get(i);
+                AssignmentDTO dto = new AssignmentDTO(
+                        as.getId(),
+                        as.getName(),
+                        as.getDueDate().toString(),
+                        as.getCourse().getTitle(),
+                        as.getCourse().getCourse_id());
+                result[i] = dto;
+            }
+            return result;
+//        } else {
+//
+//            return new AssignmentDTO[0];
         }
-        return result;
-    }
+
+
 
 
 
     @GetMapping("/assignment/{assignment_id}") //get by ID
 
-    public AssignmentDTO getListAssignment(@PathVariable("assignment_id") int assignment_id) {
-        String instructorEmail = "dwisneski@csumb.edu";
+    public AssignmentDTO getListAssignment(@PathVariable("assignment_id") int assignment_id, Principal principal) {
+        String userEmail = principal.getName();
         Assignment assignment = assignmentRepository.findById(assignment_id).orElse(null);
-        if (assignment == null){
-            throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "assignment not found "+ assignment_id);
+        if (assignment == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found " + assignment_id);
         }
-        if (! assignment.getCourse().getInstructor().equals(instructorEmail)) {
-            throw  new ResponseStatusException( HttpStatus.FORBIDDEN, "not authorized "+assignment_id);
+        if (!assignment.getCourse().getInstructor().equals(userEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized " + assignment_id);
         }
         return new AssignmentDTO(
                 assignment.getId(),
@@ -71,8 +84,8 @@ public class AssignmentController {
 
     @DeleteMapping("/assignment/{assignment_id}")
     public void deleteAssignment(
-            @PathVariable("assignment_id") int id ,@RequestParam(value = "force") Optional<String> force){
-        String instructorEmail = "dwisneski@csumb.edu";
+            @PathVariable("assignment_id") int id ,@RequestParam(value = "force") Optional<String> force , Principal principal){
+        String instructorEmail = principal.getName();
         Assignment assignment = assignmentRepository.findById(id).orElse(null);
         if (assignment == null){
             return;
@@ -92,8 +105,8 @@ public class AssignmentController {
     @PutMapping("/assignment/{assignment_id}")
     public void updateAssignment(
             @PathVariable("assignment_id") int id,
-            @RequestBody AssignmentDTO assign) {
-        String instructorEmail = "dwisneski@csumb.edu";
+            @RequestBody AssignmentDTO assign , Principal principal) {
+        String instructorEmail = principal.getName();
         Assignment updateAssignment = assignmentRepository.findById(id).orElse(null);
         if (updateAssignment==null || ! updateAssignment.getCourse().getInstructor().equals(instructorEmail)){
             throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "assignment not found or not authorized "+id);
@@ -104,8 +117,8 @@ public class AssignmentController {
     }
 
     @PostMapping("/assignment")
-    public int AddAssignment(@RequestBody AssignmentDTO assignmentDTO) {
-        String instructor_email = "dwisneski@csumb.edu";
+    public int AddAssignment(@RequestBody AssignmentDTO assignmentDTO , Principal principal) {
+        String instructor_email = principal.getName();
         Course course = courseRepository.findById(assignmentDTO.courseId()).orElse(null);
         if(course == null || ! course.getInstructor().equals(instructor_email))
             throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "course id not found or not authorized" + assignmentDTO.courseId());

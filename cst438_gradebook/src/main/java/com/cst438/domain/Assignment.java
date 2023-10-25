@@ -21,7 +21,9 @@ public class Assignment {
 	@ManyToOne
 	@JoinColumn(name="course_id")
 	private Course course;
-	
+
+
+
 	@OneToMany(mappedBy="assignment")
 	private List<AssignmentGrade> assignmentGrades;
 	

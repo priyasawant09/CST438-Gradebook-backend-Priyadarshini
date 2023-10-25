@@ -122,7 +122,7 @@ public class AssignmentControllerTests {
         assign2.setCourse(course2);
         List<Assignment> assignments = Arrays.asList(assign1, assign2);
 
-        when(assignmentRepository.findByEmail(instructorEmail)).thenReturn(assignments);
+        //when(assignmentRepository.findByEmail(instructorEmail)).thenReturn(assignments);
         MockHttpServletResponse response = mvc.perform(MockMvcRequestBuilders.get("/assignment")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
